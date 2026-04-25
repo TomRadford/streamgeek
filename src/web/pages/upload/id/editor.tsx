@@ -9,9 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
 import { startJob } from "../../../shared/functions";
-import { Agent, Job, Video } from "../../../../db";
+import { Agent, Job } from "../../../../db";
 import { Uploader, UploadResult } from "./uploader";
 import { TranscodeStatus } from "./transcode-status";
 
@@ -29,14 +28,22 @@ export function UploadEditor({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [isClientUploading, setIsClientUploading] = useState(false);
+
+  const isProcessing =
+    Boolean(uploadResult) ||
+    job?.status === "encoding" ||
+    job?.status === "uploading";
 
   const handleUploadComplete = async (result: UploadResult) => {
     if (result.error || !result.uploadUrl) {
       console.error(result.error);
+      setIsClientUploading(false);
       setError(result.error || "Unknown error");
       return;
     }
 
+    setIsClientUploading(false);
     setUploadResult(result);
 
     const startJobActionRes = await startJob({
@@ -68,17 +75,25 @@ export function UploadEditor({
 
           {job ? (
             <div className="space-y-4">
-              {uploadResult ||
-              job.status === "encoding" ||
-              job.status === "uploading" ? (
-                <TranscodeStatus
-                  url={job.agent.url}
-                  jobId={job.id}
-                  videoId={videoId}
-                  token={token!}
-                />
+              {isProcessing ? (
+                <>
+                  <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                    You can safely close this page while the agent processes the video.
+                  </div>
+                  <TranscodeStatus
+                    url={job.agent.url}
+                    jobId={job.id}
+                    videoId={videoId}
+                    token={token!}
+                  />
+                </>
               ) : (
                 <div className="space-y-4">
+                  {isClientUploading && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                      Do not close this page while the video uploads.
+                    </div>
+                  )}
                   {token ? (
                     <Uploader
                       endpoint={`${job.agent.url}/upload`}
@@ -88,6 +103,8 @@ export function UploadEditor({
                       token={token}
                       onUploadStart={() => {
                         // ToDo: add a "transferring" state since we use "uploading" state for when agent uploads to R2
+                        // this local state will suffice for now since the client cant close the page while uploading
+                        setIsClientUploading(true);
                       }}
                     />
                   ) : (

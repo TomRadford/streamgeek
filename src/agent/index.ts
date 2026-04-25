@@ -6,10 +6,11 @@
  * access the db directly.
  */
 
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import agentApp from "./server";
 import fs from "fs/promises";
-import { Agent } from "../db";
+import type { Agent } from "../db";
 import { orchestratorClient } from "./orchestratorClient";
 
 const startServer = async () => {

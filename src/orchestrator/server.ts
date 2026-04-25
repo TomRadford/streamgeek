@@ -7,6 +7,7 @@ import { db } from "../db";
 import { JobStatus, Prisma } from "@generated/prisma/client";
 import { apiKeyAuth } from "../shared/apiAuth";
 import { env } from "cloudflare:workers";
+import { sendDoneEmail } from "@/web/emails/send";
 
 /**
  * All of our orchestrator api endpoints live in this hono app.
@@ -80,6 +81,9 @@ const orchestratorApp = new Hono()
         where: { id: jobId },
         data: { status: status },
       });
+      if (status === "done") {
+        c.executionCtx.waitUntil(sendDoneEmail(job.videoId));
+      }
       return c.json({ job });
     },
   )

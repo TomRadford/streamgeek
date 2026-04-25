@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import type { Agent } from "../../../generated/prisma/client";
+import type { Agent } from "@generated/prisma/client";
 import createAgentClient from "../../agent/client";
 import { db } from "../../db";
 

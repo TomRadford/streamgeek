@@ -4,8 +4,7 @@ import { route } from "rwsdk/router";
 import { RequestInfo } from "rwsdk/worker";
 import { z } from "zod";
 import { db } from "../db";
-import { JobStatus } from "../../generated/prisma/enums";
-import { PrismaClientKnownRequestError } from "../../generated/prisma/internal/prismaNamespace";
+import { JobStatus, Prisma } from "@generated/prisma/client";
 import { apiKeyAuth } from "../shared/apiAuth";
 import { env } from "cloudflare:workers";
 
@@ -60,7 +59,7 @@ const orchestratorApp = new Hono()
 
         return c.json({ message: "Agent updated", agent });
       } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
           return c.json(
             { success: false, agent: null, error: error.message },
             400,

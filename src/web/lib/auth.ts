@@ -9,7 +9,7 @@ export const createAuth = async (env: any) => {
     database: prismaAdapter(db, {
       provider: "sqlite",
     }),
-    appName: "VidYeet",
+    appName: "StreamGeek",
     baseURL: env.BASE_URL || "http://localhost:5173",
     emailAndPassword: {
       enabled: true,

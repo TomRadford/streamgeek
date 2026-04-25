@@ -82,8 +82,8 @@ export function Register({ inviteOnly = false }) {
 
   return (
     <>
-      <title>Register - VidYeet</title>
-      <meta name="description" content="Register to VidYeet" />
+      <title>Register - StreamGeek</title>
+      <meta name="description" content="Register to StreamGeek" />
       <div className="flex flex-col gap-4 max-w-md mx-auto p-6">
         <Card>
           <CardHeader className="text-center">

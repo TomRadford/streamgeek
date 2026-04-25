@@ -4,13 +4,13 @@ services:
   # we use a local minio server for development with the agent nodejs server.
   minio:
     image: minio/minio:latest
-    container_name: vidyeet-minio
+    container_name: streamgeek-minio
     ports:
       - "9000:9000" # S3 API
       - "9001:9001" # MinIO Console
     environment:
-      MINIO_ROOT_USER: vidyeet
-      MINIO_ROOT_PASSWORD: vidyeet12345678
+      MINIO_ROOT_USER: streamgeek
+      MINIO_ROOT_PASSWORD: streamgeek
     command: server /data --console-address ":9001"
     volumes:
       - ./minio-data:/data
@@ -20,8 +20,8 @@ services:
     depends_on:
       - minio
     environment:
-      MC_HOST_myminio: http://vidyeet:vidyeet12345678@minio:9000
-      BUCKET: vidyeet
+      MC_HOST_myminio: http://streamgeek:streamgeek@minio:9000
+      BUCKET: streamgeek
     entrypoint: ["/bin/sh", "-c"]
     command:
       [

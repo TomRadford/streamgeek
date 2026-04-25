@@ -1,4 +1,4 @@
-# VidYeet
+# StreamGeek
 
 Easy (mostly free) cloudflare-backed video streaming for the homies 🎥
 

@@ -29,7 +29,7 @@ export async function VideoPage({ ctx, params }: RequestInfo) {
 
   return (
     <>
-      <title>{`${video.title} - VidYeet`}</title>
+      <title>{`${video.title} - StreamGeek`}</title>
       <meta name="description" content={video.description ?? ""} />
       <div className="flex flex-col gap-4 min-h-0 max-h-screen">
         {video.playlistUrl && (

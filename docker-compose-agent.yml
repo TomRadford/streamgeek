@@ -14,8 +14,8 @@ services:
       - ./output:/app/output
       - ./agent_id.txt:/app/agent_id.txt
     networks:
-      - vidyeet-network
+      - streamgeek-network
 
 networks:
-  vidyeet-network:
+  streamgeek-network:
     driver: bridge

@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { Register } from "./Register";
+import { Register } from "./register";
 
 /**
  * RSC that wraps client register component with invite only flag

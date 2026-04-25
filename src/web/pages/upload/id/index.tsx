@@ -130,8 +130,8 @@ export async function UploadEditorPage({
 
   return (
     <>
-      <title>{`Upload for ${video.title} - VidYeet`}</title>
-      <meta name="description" content="Upload a video to VidYeet" />
+      <title>{`Upload for ${video.title} - StreamGeek`}</title>
+      <meta name="description" content="Upload a video to StreamGeek" />
       <UploadEditor
         videoId={video.id}
         videoTitle={video.title}

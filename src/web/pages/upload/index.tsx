@@ -40,8 +40,8 @@ export function CreateUpload() {
 
   return (
     <>
-      <title>Upload - VidYeet</title>
-      <meta name="description" content="Upload a video to VidYeet" />
+      <title>Upload - StreamGeek</title>
+      <meta name="description" content="Upload a video to StreamGeek" />
       <div className="flex flex-col gap-4 max-w-md mx-auto p-6">
         <Card>
           <CardHeader className="text-center">

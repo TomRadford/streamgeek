@@ -60,7 +60,7 @@ export function Login() {
 
   return (
     <>
-      <title>Login - VidYeet</title>
+      <title>Login - StreamGeek</title>
       <meta name="description" content="Login to your account" />
       <div className="flex flex-col gap-4 max-w-md mx-auto p-6">
         <Card>

@@ -295,8 +295,12 @@ const agentApp = new Hono()
 
     const job = jobRes.job;
 
-    if (job.status !== "queued" && job.status !== "encoding") {
-      return c.json({ error: "Job is not queued" }, 400);
+    if (
+      job.status !== "queued" &&
+      job.status !== "encoding" &&
+      job.status !== "uploading"
+    ) {
+      return c.json({ error: "Job is not active" }, 400);
     }
 
     const token = generateUploadToken(jobId);

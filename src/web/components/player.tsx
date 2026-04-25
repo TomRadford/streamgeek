@@ -1,7 +1,7 @@
 "use client";
 
 import HlsVideoElement from "hls-video-element/react";
-import { Video } from "../../db";
+import type { Video } from "../../db";
 import {
   MediaPlayer,
   MediaPlayerVideo,

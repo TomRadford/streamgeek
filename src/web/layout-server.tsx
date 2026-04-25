@@ -3,7 +3,10 @@ import { AppLayoutClient } from "./layout-client";
 
 export async function AppLayoutServer({ children, requestInfo }: LayoutProps) {
   return (
-    <AppLayoutClient session={requestInfo?.ctx.session}>
+    <AppLayoutClient
+      session={requestInfo?.ctx.session}
+      initialTheme={requestInfo?.ctx.theme}
+    >
       {children}
     </AppLayoutClient>
   );

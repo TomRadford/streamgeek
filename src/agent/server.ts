@@ -2,7 +2,9 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 
-import fs from "fs/promises";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { FileStore } from "@tus/file-store";
 import { Server } from "@tus/server";
 import { z } from "zod";
@@ -15,6 +17,7 @@ import { orchestratorClient } from "./orchestratorClient";
 import { generateUploadToken } from "./tokenUtils";
 import { uploadTokenAuth } from "./uploadAuth";
 import { getResolution } from "./utils";
+import { removeLocalArtifact } from "./fs";
 
 const tusServer = new Server({
   path: "/upload",
@@ -196,6 +199,9 @@ const agentApp = new Hono()
       );
 
       const outputFolder = new URL(`file://${process.cwd()}/output`);
+      const inputFilePath = fileURLToPath(inputPath);
+      const outputFolderPath = fileURLToPath(outputFolder);
+      const outputVideoPath = path.join(outputFolderPath, videoId);
 
       // We sneaky DONT AWAIT here to avoid blocking the request
       processPresets(inputPath, videoId, outputFolder, (message) => {
@@ -204,7 +210,7 @@ const agentApp = new Hono()
         bufferMessage(jobId, message);
       })
         .then(async () => {
-          const dimensions = await getResolution(decodeURI(inputPath.pathname));
+          const dimensions = await getResolution(inputFilePath);
 
           transcodingEvents.emit(jobId, "Uploading to R2");
           bufferMessage(jobId, "Uploading to R2");
@@ -217,7 +223,7 @@ const agentApp = new Hono()
           });
 
           await uploadFolderToS3({
-            localFolderPath: `${outputFolder.pathname}/${videoId}`,
+            localFolderPath: outputVideoPath,
             bucketName: process.env.S3_BUCKET!,
             s3Prefix: videoId,
             onProgress: (message) => {
@@ -227,11 +233,11 @@ const agentApp = new Hono()
           });
 
           // Delete input file and input file metadata
-          await fs.rm(`${inputPath.pathname}`);
-          await fs.rm(`${inputPath.pathname}.json`);
+          await removeLocalArtifact(inputFilePath);
+          await removeLocalArtifact(`${inputFilePath}.json`);
 
           // Delete output folder
-          await fs.rm(`${outputFolder.pathname}/${videoId}`, {
+          await removeLocalArtifact(outputVideoPath, {
             recursive: true,
           });
 

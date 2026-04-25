@@ -14,6 +14,7 @@ import {
 } from "./ui/dialog";
 import { deleteVideo } from "../shared/functions";
 import { link } from "../shared/links";
+import { navigate } from "rwsdk/client";
 
 interface DeleteDialogProps {
   videoId: string;
@@ -34,8 +35,7 @@ export function DeleteDialog({ videoId, videoTitle }: DeleteDialogProps) {
 
         if (result.success) {
           setOpen(false);
-          // Redirect to home page after successful deletion
-          window.location.href = link("/");
+          await navigate(link("/"), { history: "replace" });
         } else {
           setError(result.error?.message || "Failed to delete video");
         }

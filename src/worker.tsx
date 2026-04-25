@@ -16,14 +16,16 @@ import { videoRoutes } from "./web/pages/video/routes";
 import { createAuth } from "./web/lib/auth";
 import { AppLayoutServer } from "./web/layout-server";
 import { EmbedPage } from "./web/pages/embed";
+import { parseThemeCookie, type Theme } from "./web/shared/theme";
 
 export type AppContext = {
   session: Session | null;
   user: User | null;
   authUrl: string;
+  theme: Theme;
 };
 
-export default defineApp([
+const app = defineApp([
   setCommonHeaders(),
   async ({ ctx, request }) => {
     await setupDb(env);
@@ -31,6 +33,7 @@ export default defineApp([
     const auth = await createAuth(env);
 
     ctx.authUrl = env.BASE_URL;
+    ctx.theme = parseThemeCookie(request.headers.get("Cookie"));
 
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -56,3 +59,5 @@ export default defineApp([
     ]),
   ]),
 ]);
+
+export default { fetch: app.fetch } satisfies ExportedHandler<Env>;

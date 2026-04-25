@@ -1,31 +1,22 @@
-import ffmpeg from "fluent-ffmpeg";
+import { runFfprobe } from "./ffmpeg";
 
 type Resolution = [width: number, height: number];
 export async function getResolution(input: string): Promise<Resolution> {
-  const { promise, resolve, reject } = Promise.withResolvers<Resolution>();
-  ffmpeg.ffprobe(input, (err, metadata) => {
-    if (err) {
-      reject(err);
-    } else {
-      const video_stream = metadata.streams.find(
-        (stream) => stream.codec_type === "video"
-      );
-      resolve([video_stream!.width as number, video_stream!.height as number]);
-    }
-  });
-  return promise;
+  const metadata = await runFfprobe(input);
+  const video_stream = metadata.streams.find(
+    (stream) => stream.codec_type === "video"
+  );
+
+  if (!video_stream?.width || !video_stream.height) {
+    throw new Error(`No video stream with dimensions found in ${input}`);
+  }
+
+  return [video_stream.width, video_stream.height];
 }
 
 export async function getDuration(input: string): Promise<number> {
-  const { promise, resolve, reject } = Promise.withResolvers<number>();
-  ffmpeg.ffprobe(input, (err, metadata) => {
-    if (err) {
-      reject(err);
-    } else {
-      resolve(metadata.format.duration || 0);
-    }
-  });
-  return promise;
+  const metadata = await runFfprobe(input);
+  return Number(metadata.format.duration || 0);
 }
 
 export type VideoOrientation = "horizontal" | "vertical";

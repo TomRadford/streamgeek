@@ -6,6 +6,7 @@ import { link } from "../../../shared/links";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { CheckCircle, AlertCircle, Wifi, WifiOff, Loader2 } from "lucide-react";
+import { navigate } from "rwsdk/client";
 
 export const TranscodeStatus = ({
   url,
@@ -64,7 +65,9 @@ export const TranscodeStatus = ({
 
       // Show completion status for 2 seconds before redirecting
       setTimeout(() => {
-        window.location.href = link("/video/:id", { id: videoId });
+        void navigate(link("/video/:id", { id: videoId }), {
+          history: "replace",
+        });
       }, 2000);
     });
 

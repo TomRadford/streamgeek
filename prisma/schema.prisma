@@ -13,12 +13,10 @@ generator client {
   importFileExtension    = "ts"
 
   output          = "../generated/prisma"
-  previewFeatures = ["queryCompiler", "driverAdapters"]
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model Video {

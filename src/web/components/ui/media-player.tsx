@@ -55,6 +55,7 @@ import {
 } from "media-chrome/react/media-store";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { navigate } from "rwsdk/client";
 
 const ROOT_NAME = "MediaPlayer";
 const SEEK_NAME = "MediaPlayerSeek";
@@ -1045,7 +1046,10 @@ function MediaPlayerError(props: MediaPlayerErrorProps) {
       if (onReloadProp) {
         onReloadProp();
       } else {
-        window.location.reload();
+        void navigate(`${window.location.pathname}${window.location.search}`, {
+          history: "replace",
+          info: { scrollToTop: false },
+        });
       }
     });
   }, [onReloadProp]);

@@ -13,6 +13,7 @@ import {
 } from "../../../components/ui/card";
 import { authClient } from "../../../lib/auth-client";
 import { link } from "../../../shared/links";
+import { navigate } from "rwsdk/client";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -43,8 +44,7 @@ export function Login() {
           // show loading
         },
         onSuccess: (ctx) => {
-          // redirect to the dashboard or sign in page
-          window.location.href = link("/upload");
+          void navigate(link("/upload"), { history: "replace" });
         },
         onError: (ctx) => {
           // display the error message

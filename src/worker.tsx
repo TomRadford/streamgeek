@@ -25,7 +25,7 @@ export type AppContext = {
   theme: Theme;
 };
 
-export default defineApp([
+const app = defineApp([
   setCommonHeaders(),
   async ({ ctx, request }) => {
     await setupDb(env);
@@ -59,3 +59,5 @@ export default defineApp([
     ]),
   ]),
 ]);
+
+export default { fetch: app.fetch } satisfies ExportedHandler<Env>;

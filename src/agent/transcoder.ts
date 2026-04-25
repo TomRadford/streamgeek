@@ -6,9 +6,9 @@
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
-import ffmpeg from "fluent-ffmpeg";
-import { basename, extname, join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { logProcessError, runFfmpeg } from "./ffmpeg";
 import {
   getResolution,
   getDuration,
@@ -66,8 +66,6 @@ async function generateThumbnail(
 
   await mkdir(output_folder, { recursive: true });
 
-  const { promise, resolve, reject } = Promise.withResolvers<void>();
-
   // Get source video dimensions and duration
   const [sourceWidth, sourceHeight] = await getResolution(
     decodeURI(input.pathname)
@@ -89,7 +87,7 @@ async function generateThumbnail(
   }
 
   // Calculate the middle point of the video for thumbnail generation
-  const middleTime = Math.max(1, Math.floor(duration / 2));
+  const middleTime = duration > 2 ? Math.floor(duration / 2) : 0;
 
   // Format timestamp to handle any duration (HH:MM:SS)
   const hours = Math.floor(middleTime / 3600);
@@ -107,9 +105,14 @@ async function generateThumbnail(
     `Video duration: ${duration}s, thumbnail at: ${middleTimeFormatted}`
   );
 
-  ffmpeg(decodeURI(input.pathname))
-    .seekInput(middleTimeFormatted)
-    .outputOptions([
+  console.log("Thumbnail generation started");
+
+  try {
+    await runFfmpeg([
+      "-ss",
+      middleTimeFormatted,
+      "-i",
+      decodeURI(input.pathname),
       "-y", // Overwrite retry artifacts from previous failed runs
       "-frames:v",
       "1", // Extract only 1 frame
@@ -119,25 +122,15 @@ async function generateThumbnail(
       "2", // High quality JPEG
       "-strict",
       "unofficial", // Allow non-standard YUV ranges for MJPEG encoding
-    ])
-    .output(thumbnail_path)
-    .on("start", (cmdline) => {
-      console.log("Thumbnail generation started");
-      console.log(cmdline);
-    })
-    .on("end", () => {
-      console.log("Thumbnail generation completed");
-      resolve();
-    })
-    .on("error", (err, stdout, stderr) => {
-      console.error("Thumbnail generation error");
-      console.error(err);
-      console.error(stderr);
-      reject(err);
-    })
-    .run();
-
-  return promise;
+      "-update",
+      "1",
+      thumbnail_path,
+    ]);
+    console.log("Thumbnail generation completed");
+  } catch (error) {
+    logProcessError("Thumbnail generation", error);
+    throw error;
+  }
 }
 
 async function transcode(
@@ -147,28 +140,32 @@ async function transcode(
   outputFolder: URL,
   videoId: string
 ): Promise<TranscodeResult> {
-  const input_extension = extname(input.pathname);
-  const input_filename = decodeURI(basename(input.pathname, input_extension));
-  const output_folder = new URL(`${outputFolder}/${videoId}`);
-  const m3u8_path = `${output_folder}/${preset.resolution}p.m3u8`;
+  const output_folder = join(fileURLToPath(outputFolder), videoId);
+  const m3u8_path = join(output_folder, `${preset.resolution}p.m3u8`);
   console.log(
     `transcoding ${input.pathname} to ${preset.resolution}p (${orientation})`
   );
   await mkdir(output_folder, { recursive: true });
-  const { promise, resolve, reject } = Promise.withResolvers<TranscodeResult>();
 
   const scaleFilter =
     orientation === "vertical"
       ? `scale=${preset.resolution}:-2` // For vertical videos, scale by width
       : `scale=-2:${preset.resolution}`; // For horizontal videos, scale by height
 
-  ffmpeg(decodeURI(input.pathname))
-    // .videoCodec('h264_videotoolbox')
-    .videoCodec("libx264")
-    .audioCodec("aac")
-    .videoBitrate(`${preset.bitrate}k`)
-    .audioBitrate("128k")
-    .outputOptions([
+  console.log(`${preset.resolution}p start`);
+
+  try {
+    await runFfmpeg([
+      "-i",
+      decodeURI(input.pathname),
+      "-c:v",
+      "libx264",
+      "-c:a",
+      "aac",
+      "-b:v",
+      `${preset.bitrate}k`,
+      "-b:a",
+      "128k",
       "-filter:v",
       scaleFilter,
       "-preset",
@@ -189,40 +186,24 @@ async function transcode(
       "vod",
       "-hls_segment_filename",
       `${output_folder}/${preset.resolution}_%03d.ts`,
-    ])
-    .output(m3u8_path)
-    .on("start", (cmdline) => {
-      console.log(`${preset.resolution}p start`);
-      // console.log(cmdline)
-    })
-    .on("codecData", function (data) {
-      console.log(
-        "Input is " + data.audio + " audio " + "with " + data.video + " video"
-      );
-    })
-    .on("end", async () => {
-      console.log(`${preset.resolution}p done`);
-      const [width, height] = await getResolution(m3u8_path);
-      // Get just the filename from the path
-      const m3u8_filename = basename(m3u8_path);
-      resolve({
-        width,
-        height,
-        m3u8_path,
-        m3u8_filename,
-        bitrate: preset.bitrate,
-      });
-    })
-    .on("error", (err, stdout, stderr) => {
-      console.error(`${preset.resolution}p error`);
-      console.error(err);
-      // console.error(stdout);
-      console.error(stderr);
-      reject(err);
-    })
-    .run();
+      m3u8_path,
+    ]);
+  } catch (error) {
+    logProcessError(`${preset.resolution}p`, error);
+    throw error;
+  }
 
-  return promise;
+  console.log(`${preset.resolution}p done`);
+  const [width, height] = await getResolution(m3u8_path);
+  // Get just the filename from the path
+  const m3u8_filename = basename(m3u8_path);
+  return {
+    width,
+    height,
+    m3u8_path,
+    m3u8_filename,
+    bitrate: preset.bitrate,
+  };
 }
 
 export async function processPresets(
@@ -235,7 +216,7 @@ export async function processPresets(
   onChange?.("Starting transcoding");
 
   // Ensure the base output directory exists
-  await mkdir(outputFolder.pathname, { recursive: true });
+  await mkdir(fileURLToPath(outputFolder), { recursive: true });
 
   const [input_width, input_height] = await getResolution(
     decodeURI(input.pathname)
@@ -276,10 +257,10 @@ export async function processPresets(
   onChange?.("Transcoding complete");
 
   // Ensure the video-specific output directory exists before writing playlist
-  const videoOutputDir = `${outputFolder.pathname}/${videoId}`;
+  const videoOutputDir = join(fileURLToPath(outputFolder), videoId);
   await mkdir(videoOutputDir, { recursive: true });
 
-  await writeFile(`${videoOutputDir}/playlist.m3u8`, playlist);
+  await writeFile(join(videoOutputDir, "playlist.m3u8"), playlist);
 
   // Generate thumbnail after transcoding is complete
   onChange?.("Generating thumbnail");

@@ -40,7 +40,7 @@ const orchestratorApp = new Hono()
         message: "Agent registered",
         agent,
       });
-    }
+    },
   )
   .patch(
     "/agent/:id",
@@ -63,12 +63,12 @@ const orchestratorApp = new Hono()
         if (error instanceof PrismaClientKnownRequestError) {
           return c.json(
             { success: false, agent: null, error: error.message },
-            400
+            400,
           );
         }
         return c.json({ error: "Internal server error" }, 500);
       }
-    }
+    },
   )
   // Jobs
   .patch(
@@ -82,7 +82,7 @@ const orchestratorApp = new Hono()
         data: { status: status },
       });
       return c.json({ job });
-    }
+    },
   )
   .get("/job/:jobId", async (c) => {
     const { jobId } = c.req.param();
@@ -101,7 +101,7 @@ const orchestratorApp = new Hono()
         playlistUrl: z.string().optional(),
         width: z.number().optional(),
         height: z.number().optional(),
-      })
+      }),
     ),
     async (c) => {
       const { videoId } = c.req.param();
@@ -111,12 +111,11 @@ const orchestratorApp = new Hono()
         data: { thumbnailUrl, playlistUrl, width, height },
       });
       return c.json({ video });
-    }
+    },
   );
 
 async function orchestratorHandler({ request, params, ctx }: RequestInfo) {
   // ToDo: do we need params/ctx out of redwood?
-  //   console.log(request, params, ctx);
   const url = new URL(request.url);
 
   const honoRequest = new Request(new URL(url.pathname, url.origin), {

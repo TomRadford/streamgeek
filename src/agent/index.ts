@@ -9,7 +9,7 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import agentApp from "./server";
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import type { Agent } from "../db";
 import { orchestratorClient } from "./orchestratorClient";
 
@@ -61,7 +61,7 @@ const startServer = async () => {
     },
     (info) => {
       console.log(`Agent app is running on http://localhost:${info.port}`);
-    }
+    },
   );
 };
 

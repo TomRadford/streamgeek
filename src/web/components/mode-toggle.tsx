@@ -4,7 +4,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/web/components/ui/button";
-import { setTheme } from "@/web/actions/set-theme";
+import { setTheme } from "@/web/shared/set-theme";
 import { type Theme } from "@/web/shared/theme";
 
 export function ModeToggle({ initialTheme }: { initialTheme: Theme }) {

@@ -30,7 +30,7 @@ export async function UploadEditorPage({
     where: {
       videoId: id,
       status: {
-        in: ["queued", "encoding"],
+        in: ["queued", "encoding", "uploading"],
       },
     },
     include: {
@@ -97,7 +97,11 @@ export async function UploadEditorPage({
 
   let token: string | undefined;
 
-  if (job?.status === "queued" || job?.status === "encoding") {
+  if (
+    job?.status === "queued" ||
+    job?.status === "encoding" ||
+    job?.status === "uploading"
+  ) {
     const agentClient = createAgentClient(job.agent.url, env.AGENTS_API_KEY);
     try {
       const tokenResponse = await agentClient["generate-token"][":jobId"].$post(

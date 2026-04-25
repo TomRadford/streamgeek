@@ -63,7 +63,7 @@
     "dotenv": "^17.4.2",
     "execa": "^9.6.1",
     "hls-video-element": "^1.5.6",
-    "hono": "^4.8.10",
+    "hono": "^4.12.15",
     "jsonwebtoken": "^9.0.2",
     "ky": "^1.8.2",
     "lucide-react": "^0.539.0",

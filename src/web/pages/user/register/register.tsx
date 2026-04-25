@@ -13,6 +13,7 @@ import {
 } from "../../../components/ui/card";
 import { authClient } from "../../../lib/auth-client";
 import { link } from "../../../shared/links";
+import { navigate } from "rwsdk/client";
 
 export function Register({ inviteOnly = false }) {
   const [name, setName] = useState("");
@@ -66,7 +67,7 @@ export function Register({ inviteOnly = false }) {
           // show loading
         },
         onSuccess: (ctx) => {
-          window.location.href = link("/upload");
+          void navigate(link("/upload"), { history: "replace" });
         },
         onError: (ctx) => {
           // display the error message

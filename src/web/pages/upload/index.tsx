@@ -13,6 +13,7 @@ import {
 } from "../../components/ui/card";
 import { createVideo } from "../../shared/functions";
 import { link } from "../../shared/links";
+import { navigate } from "rwsdk/client";
 
 export function CreateUpload() {
   const [isPending, startTransition] = useTransition();
@@ -26,9 +27,7 @@ export function CreateUpload() {
       try {
         const result = await createVideo(title);
         if (result.success) {
-          // RedwoodSDK doesn't have a client router/support for redirects on form actions, so this works fine 🤓
-          // See https://github.com/redwoodjs/sdk/issues/472
-          window.location.href = link("/upload/:id", { id: result.video!.id });
+          await navigate(link("/upload/:id", { id: result.video!.id }));
         } else {
           setError(result.error);
         }

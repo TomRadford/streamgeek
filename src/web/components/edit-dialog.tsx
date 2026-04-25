@@ -48,8 +48,6 @@ export function EditDialog({
 
         if (result.success) {
           setOpen(false);
-          // Optionally refresh the page or update the UI
-          window.location.reload();
         } else {
           setError(result.error?.message || "Failed to update video");
         }

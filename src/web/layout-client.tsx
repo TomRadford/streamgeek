@@ -7,6 +7,7 @@ import { authClient } from "@/web/lib/auth-client";
 import { Video, LogIn, LogOut, HardDriveUpload } from "lucide-react";
 import { Session } from "better-auth";
 import { link } from "./shared/links";
+import { navigate } from "rwsdk/client";
 
 export function AppLayoutClient({
   children,
@@ -18,14 +19,14 @@ export function AppLayoutClient({
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      window.location.href = "/user/login";
+      void navigate(link("/user/login"), { history: "replace" });
     } catch (error) {
       console.error("Error during logout:", error);
     }
   };
 
   const handleLogin = () => {
-    window.location.href = "/user/login";
+    void navigate(link("/user/login"));
   };
 
   return (

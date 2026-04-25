@@ -117,17 +117,22 @@ const orchestratorApp = new Hono()
     },
   );
 
-async function orchestratorHandler({ request, params, ctx }: RequestInfo) {
+async function orchestratorHandler({ request, params, ctx, cf }: RequestInfo) {
   // ToDo: do we need params/ctx out of redwood?
   const url = new URL(request.url);
 
-  const honoRequest = new Request(new URL(url.pathname, url.origin), {
+  const honoRequest = new Request(new URL(`${url.pathname}${url.search}`, url.origin), {
     method: request.method,
     headers: request.headers,
     body: request.body,
   });
 
-  const response = await orchestratorApp.request(honoRequest);
+  const response = await orchestratorApp.request(
+    honoRequest,
+    undefined,
+    undefined,
+    cf,
+  );
   return response;
 }
 

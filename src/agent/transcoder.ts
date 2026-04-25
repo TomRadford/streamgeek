@@ -7,7 +7,8 @@
 
 import { mkdir, writeFile } from "node:fs/promises";
 import ffmpeg from "fluent-ffmpeg";
-import { basename, extname } from "node:path";
+import { basename, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   getResolution,
   getDuration,
@@ -58,8 +59,8 @@ async function generateThumbnail(
   outputFolder: URL,
   videoId: string
 ): Promise<void> {
-  const output_folder = new URL(`${outputFolder}/${videoId}`);
-  const thumbnail_path = `${output_folder}/thumbnail.jpeg`;
+  const output_folder = join(fileURLToPath(outputFolder), videoId);
+  const thumbnail_path = join(output_folder, "thumbnail.jpeg");
 
   console.log(`Generating thumbnail: ${thumbnail_path}`);
 
@@ -107,11 +108,11 @@ async function generateThumbnail(
   );
 
   ffmpeg(decodeURI(input.pathname))
+    .seekInput(middleTimeFormatted)
     .outputOptions([
-      "-vframes",
+      "-y", // Overwrite retry artifacts from previous failed runs
+      "-frames:v",
       "1", // Extract only 1 frame
-      "-ss",
-      middleTimeFormatted,
       "-filter:v",
       `scale=${width}:${height}`, // Scale to calculated dimensions
       "-q:v",
@@ -120,8 +121,9 @@ async function generateThumbnail(
       "unofficial", // Allow non-standard YUV ranges for MJPEG encoding
     ])
     .output(thumbnail_path)
-    .on("start", () => {
+    .on("start", (cmdline) => {
       console.log("Thumbnail generation started");
+      console.log(cmdline);
     })
     .on("end", () => {
       console.log("Thumbnail generation completed");

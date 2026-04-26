@@ -27,6 +27,13 @@ export async function VideoPage({ ctx, params }: RequestInfo) {
     video.width < video.height
   );
 
+  const playerFrameStyle = {
+    maxHeight: "min(65svh, calc(100dvh - 16rem))",
+    maxWidth: isVertical
+      ? "min(100%, 36.5625svh, calc(56.25dvh - 9rem))"
+      : "min(100%, 115.555556svh, calc(177.777778dvh - 28.444444rem))",
+  };
+
   return (
     <>
       <title>{`${video.title} - StreamGeek`}</title>
@@ -34,11 +41,10 @@ export async function VideoPage({ ctx, params }: RequestInfo) {
       <div className="flex flex-col gap-4 min-h-0 max-h-screen">
         {video.playlistUrl && (
           <div
+            style={playerFrameStyle}
             className={cn(
-              "w-full max-h-[80vh]",
-              !isVertical
-                ? "aspect-16/9"
-                : "aspect-9/16 sm:max-w-[50vw] mx-auto",
+              "w-full mx-auto",
+              !isVertical ? "aspect-16/9" : "aspect-9/16 sm:max-w-[50vw]",
             )}
           >
             <VideoPlayer video={video} className="w-full h-full" />

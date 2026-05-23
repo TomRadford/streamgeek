@@ -13,14 +13,14 @@ Get going with your own video hosting quick n' easy!
 
 ### Prerequisits
 
-- A cloudflare account with a domain
-- A computer/server/vps for transcoding agent with Docker installed and a public https reverse proxy
+- A **cloudflare account with a domain**
+- A **computer/server/vps** for transcoding agent with Docker installed and a public https reverse proxy
 
 ### Stack 
 - rwsdk 🔥
 - database (Prisma via D1)
 - Auth (better auth)
-- Storage (via R2)
+- Storage (via R2) - free egress!
 - Transcoding agents (node + ffmpeg + docker)
 
 ### Wrangler Setup

@@ -8,6 +8,7 @@ import { Session } from "better-auth";
 import { link } from "./shared/links";
 import { navigate } from "rwsdk/client";
 import { DEFAULT_THEME, type Theme } from "./shared/theme";
+import { useNavigationLoading } from "@/web/lib/navigation-loading";
 
 export function AppLayoutClient({
   children,
@@ -18,6 +19,8 @@ export function AppLayoutClient({
   session?: Session | null;
   initialTheme?: Theme;
 }) {
+  const isNavigationLoading = useNavigationLoading();
+
   const handleLogout = async () => {
     try {
       await authClient.signOut();
@@ -33,6 +36,12 @@ export function AppLayoutClient({
 
   return (
     <div className=" mx-8 sm:mx-24 my-8 flex flex-col gap-8 2xl:mx-48">
+      <div
+        aria-hidden="true"
+        className={`fixed left-0 top-0 z-50 h-0.5 bg-primary transition-all duration-500 animate-pulse ${
+          isNavigationLoading ? "w-full opacity-100" : "w-0 opacity-0"
+        }`}
+      />
       <div className="flex justify-between items-center gap-4">
         <a
           href="/"

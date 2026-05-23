@@ -1,5 +1,7 @@
 # StreamGeek
 
+## [Watch the demo!](https://video.rad.gdn/video/QZUWFxlOsIh)
+
 Easy (mostly free) cloudflare-backed video streaming for the homies 🎥
 
 - User authentication

@@ -1,5 +1,4 @@
 import { RequestInfo } from "rwsdk/worker";
-import { db } from "../../../../db";
 import { VideoPlayer } from "../../../components/player";
 import { ShareDialog } from "../../../components/share-dialog";
 import { EditDialog } from "../../../components/edit-dialog";
@@ -12,7 +11,7 @@ export async function VideoPage({ ctx, params }: RequestInfo) {
 
   const user = ctx.user;
 
-  const video = await db.video.findUnique({
+  const video = await ctx.db.video.findUnique({
     where: {
       id,
     },

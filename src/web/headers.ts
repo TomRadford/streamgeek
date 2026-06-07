@@ -3,9 +3,7 @@ import { RouteMiddleware } from "rwsdk/router";
 
 export const setCommonHeaders =
   (): RouteMiddleware =>
-  ({ request, response, rw: { nonce } }) => {
-    const pathname = new URL(request.url).pathname;
-
+  ({ response, rw: { nonce } }) => {
     if (!import.meta.env.VITE_IS_DEV_SERVER) {
       // Forces browsers to always use HTTPS for a specified time period (2 years)
       response.headers.set(
@@ -30,10 +28,6 @@ export const setCommonHeaders =
     const s3UrlWithTrailingSlash = env.S3_PUBLIC_ACCESS.endsWith("/")
       ? env.S3_PUBLIC_ACCESS
       : `${env.S3_PUBLIC_ACCESS}/`;
-
-    if (pathname.startsWith("/embed/")) {
-      response.headers.set("X-Embed-Route", "1");
-    }
 
     response.headers.set(
       "Content-Security-Policy",

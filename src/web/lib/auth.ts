@@ -1,10 +1,10 @@
-import { db } from "@/db";
+import type { AppDb } from "@/db";
 import { betterAuth } from "better-auth";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
 // Runtime function for creating auth with Cloudflare Workers context
-export const createAuth = async (env: any) => {
+export const createAuth = async (env: any, db: AppDb) => {
   return betterAuth({
     database: prismaAdapter(db, {
       provider: "sqlite",
@@ -37,7 +37,7 @@ const createAuthForCLI = async () => {
   // Use process.env for CLI context
   const env = process.env;
 
-  return await createAuth(env);
+  return await createAuth(env, undefined as unknown as AppDb);
 };
 
 // Export for CLI compatibility - Better Auth CLI will detect this

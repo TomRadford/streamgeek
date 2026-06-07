@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { db } from "../../db";
+import type { AppDb } from "../../db";
 
 function escapeHtml(value: string) {
   return value
@@ -10,7 +10,7 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
-export async function sendDoneEmail(videoId: string) {
+export async function sendDoneEmail(db: AppDb, videoId: string) {
   const video = await db.video.findUnique({
     where: { id: videoId },
     include: { user: true },

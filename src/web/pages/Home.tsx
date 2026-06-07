@@ -1,9 +1,8 @@
 import { RequestInfo } from "rwsdk/worker";
-import { db } from "../../db";
 import { VideoCard } from "../components/video-card";
 
 export async function Home({ ctx }: RequestInfo) {
-  const videos = await db.video.findMany({
+  const videos = await ctx.db.video.findMany({
     orderBy: {
       createdAt: "desc",
     },

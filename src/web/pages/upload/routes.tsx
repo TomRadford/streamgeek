@@ -1,8 +1,6 @@
 import { route } from "rwsdk/router";
 import { CreateUpload } from "./index";
-
 import { UploadEditorPage } from "./id";
-import { db } from "../../../db";
 import { link } from "../../shared/links";
 import { AppContext } from "../../../worker";
 
@@ -19,10 +17,10 @@ export const uploadRoutes = [
   route("/", [requireAuth, CreateUpload]),
   route("/:id", [
     requireAuth,
-    async ({ params }) => {
+    async ({ ctx, params }) => {
       const { id } = params;
 
-      const doneJob = await db.job.findFirst({
+      const doneJob = await ctx.db.job.findFirst({
         where: {
           videoId: id,
           status: {

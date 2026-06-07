@@ -5,7 +5,7 @@ import { Home } from "@/web/pages/Home";
 import { setCommonHeaders } from "@/web/headers";
 import { userRoutes } from "@/web/pages/user/routes";
 
-import { setupDb } from "@/db";
+import { createDb, type AppDb } from "@/db";
 import { type Session, type User } from "better-auth";
 
 import { env } from "cloudflare:workers";
@@ -19,6 +19,7 @@ import { EmbedPage } from "./web/pages/embed";
 import { parseThemeCookie, type Theme } from "./web/shared/theme";
 
 export type AppContext = {
+  db: AppDb;
   session: Session | null;
   user: User | null;
   authUrl: string;
@@ -28,13 +29,20 @@ export type AppContext = {
 const app = defineApp([
   setCommonHeaders(),
   async ({ ctx, request }) => {
-    await setupDb(env);
-
-    const auth = await createAuth(env);
+    const db = createDb(env);
+    ctx.db = db;
 
     ctx.authUrl = env.BASE_URL;
     ctx.theme = parseThemeCookie(request.headers.get("Cookie"));
 
+    const pathname = new URL(request.url).pathname;
+    if (pathname.startsWith("/embed/")) {
+      ctx.session = null;
+      ctx.user = null;
+      return; // Early exist from auth setup for the embed page since we dont need auth there
+    }
+
+    const auth = await createAuth(env, db);
     const session = await auth.api.getSession({
       headers: request.headers,
     });
@@ -44,7 +52,7 @@ const app = defineApp([
   },
   route("/api/auth/*", async ({ request }) => {
     const { createAuth } = await import("./web/lib/auth");
-    const auth = await createAuth(env);
+    const auth = await createAuth(env, createDb(env));
     return auth.handler(request);
   }),
 

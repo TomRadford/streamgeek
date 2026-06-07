@@ -1,5 +1,4 @@
-import { RequestInfo } from "rwsdk/worker";
-import { db } from "../../../../db";
+import { RequestInfo, requestInfo } from "rwsdk/worker";
 
 import createAgentClient from "../../../../agent/client";
 import { UploadEditor } from "./editor";
@@ -10,8 +9,9 @@ import { env } from "cloudflare:workers";
 export async function UploadEditorPage({
   params,
 }: Pick<RequestInfo, "params">) {
+  const { ctx } = requestInfo;
   const { id } = params;
-  const video = await db.video.findUnique({
+  const video = await ctx.db.video.findUnique({
     where: {
       id,
     },
@@ -26,7 +26,7 @@ export async function UploadEditorPage({
     );
   }
 
-  let job = await db.job.findFirst({
+  let job = await ctx.db.job.findFirst({
     where: {
       videoId: id,
       status: {
@@ -50,7 +50,7 @@ export async function UploadEditorPage({
         error,
       );
       // Mark the job as failed since its agent is down
-      await db.job.update({
+      await ctx.db.job.update({
         where: { id: job.id },
         data: { status: "failed" },
       });
@@ -60,7 +60,7 @@ export async function UploadEditorPage({
 
   // If no job or job's agent failed, try to get a new agent and create a new job
   if (!job) {
-    const agent = await getAgent();
+    const agent = await getAgent(ctx.db);
 
     if (!agent) {
       return (
@@ -72,7 +72,7 @@ export async function UploadEditorPage({
     }
 
     // kill any existing jobs for this video
-    await db.job.updateMany({
+    await ctx.db.job.updateMany({
       where: {
         videoId: id,
       },
@@ -81,7 +81,7 @@ export async function UploadEditorPage({
       },
     });
 
-    const newJob = await db.job.create({
+    const newJob = await ctx.db.job.create({
       data: {
         agentId: agent.id,
         videoId: id,

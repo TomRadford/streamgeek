@@ -1,7 +1,6 @@
 "use server";
 
 import { requestInfo } from "rwsdk/worker";
-import { db } from "../../db";
 import { generateId } from "../lib/id";
 import createAgentClient from "../../agent/client";
 import { env } from "cloudflare:workers";
@@ -19,6 +18,7 @@ import { deleteFolderFromS3 } from "../lib/s3";
 export const createVideo = async (title: string) => {
   try {
     const { ctx } = requestInfo;
+    const db = ctx.db;
 
     if (!ctx.user) {
       return { success: false, error: new Error("User not authenticated") };
@@ -53,6 +53,7 @@ export const updateVideo = async ({
 }) => {
   try {
     const { ctx } = requestInfo;
+    const db = ctx.db;
 
     if (!ctx.user) {
       return { success: false, error: new Error("User not authenticated") };
@@ -76,6 +77,7 @@ export const updateVideo = async ({
 export const deleteVideo = async ({ id }: { id: string }) => {
   try {
     const { ctx } = requestInfo;
+    const db = ctx.db;
 
     if (!ctx.user) {
       return { success: false, error: new Error("User not authenticated") };
@@ -109,6 +111,7 @@ export const startJob = async ({
 }) => {
   try {
     const { ctx } = requestInfo;
+    const db = ctx.db;
 
     if (!ctx.user) {
       return { success: false, error: new Error("User not authenticated") };

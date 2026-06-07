@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { route } from "rwsdk/router";
 import { RequestInfo } from "rwsdk/worker";
 import { z } from "zod";
-import { db } from "../db";
+import type { AppDb } from "../db";
 import { JobStatus, Prisma } from "@generated/prisma/client";
 import { apiKeyAuth } from "../shared/apiAuth";
 import { env } from "cloudflare:workers";
@@ -16,110 +16,116 @@ import { sendDoneEmail } from "@/web/emails/send";
  * We use hono here since it's got a nice api that's based on web standards
  * so its easy to convert to RedwoodSDK routes.
  */
-const orchestratorApp = new Hono()
-  .basePath("/orchestrator")
-  .use("*", (c, next) => apiKeyAuth(c, next, env.API_KEY!))
-  .get("/", (c) => {
-    return c.text("Hello Orchestrator!");
-  })
-  // Agents
-  .post(
-    "/agent/register",
-    zValidator("json", z.object({ url: z.url() })),
-    async (c) => {
-      const { url } = c.req.valid("json");
+const createOrchestratorApp = (db: AppDb) => {
+  return new Hono()
+    .basePath("/orchestrator")
+    .use("*", (c, next) => apiKeyAuth(c, next, env.API_KEY!))
+    .get("/", (c) => {
+      return c.text("Hello Orchestrator!");
+    })
+    // Agents
+    .post(
+      "/agent/register",
+      zValidator("json", z.object({ url: z.url() })),
+      async (c) => {
+        const { url } = c.req.valid("json");
 
-      const agent = await db.agent.create({
-        data: {
-          url,
-          lastSeen: new Date(),
-        },
-      });
-
-      return c.json({
-        message: "Agent registered",
-        agent,
-      });
-    },
-  )
-  .patch(
-    "/agent/:id",
-    zValidator("json", z.object({ url: z.url() })),
-    async (c) => {
-      const { id } = c.req.param();
-      const { url } = c.req.valid("json");
-
-      try {
-        const agent = await db.agent.update({
-          where: { id },
+        const agent = await db.agent.create({
           data: {
             url,
             lastSeen: new Date(),
           },
         });
 
-        return c.json({ message: "Agent updated", agent });
-      } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          return c.json(
-            { success: false, agent: null, error: error.message },
-            400,
-          );
+        return c.json({
+          message: "Agent registered",
+          agent,
+        });
+      },
+    )
+    .patch(
+      "/agent/:id",
+      zValidator("json", z.object({ url: z.url() })),
+      async (c) => {
+        const { id } = c.req.param();
+        const { url } = c.req.valid("json");
+
+        try {
+          const agent = await db.agent.update({
+            where: { id },
+            data: {
+              url,
+              lastSeen: new Date(),
+            },
+          });
+
+          return c.json({ message: "Agent updated", agent });
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            return c.json(
+              { success: false, agent: null, error: error.message },
+              400,
+            );
+          }
+          return c.json({ error: "Internal server error" }, 500);
         }
-        return c.json({ error: "Internal server error" }, 500);
-      }
-    },
-  )
-  // Jobs
-  .patch(
-    "/job/:jobId",
-    zValidator("json", z.object({ status: z.enum(JobStatus) })),
-    async (c) => {
+      },
+    )
+    // Jobs
+    .patch(
+      "/job/:jobId",
+      zValidator("json", z.object({ status: z.enum(JobStatus) })),
+      async (c) => {
+        const { jobId } = c.req.param();
+        const { status } = c.req.valid("json");
+        const job = await db.job.update({
+          where: { id: jobId },
+          data: { status: status },
+        });
+        if (status === "done") {
+          c.executionCtx.waitUntil(sendDoneEmail(db, job.videoId));
+        }
+        return c.json({ job });
+      },
+    )
+    .get("/job/:jobId", async (c) => {
       const { jobId } = c.req.param();
-      const { status } = c.req.valid("json");
-      const job = await db.job.update({
+      const job = await db.job.findUnique({
         where: { id: jobId },
-        data: { status: status },
       });
-      if (status === "done") {
-        c.executionCtx.waitUntil(sendDoneEmail(job.videoId));
-      }
       return c.json({ job });
-    },
-  )
-  .get("/job/:jobId", async (c) => {
-    const { jobId } = c.req.param();
-    const job = await db.job.findUnique({
-      where: { id: jobId },
-    });
-    return c.json({ job });
-  })
-  // Videos
-  .patch(
-    "/video/:videoId",
-    zValidator(
-      "json",
-      z.object({
-        thumbnailUrl: z.string().optional(),
-        playlistUrl: z.string().optional(),
-        width: z.number().optional(),
-        height: z.number().optional(),
-      }),
-    ),
-    async (c) => {
-      const { videoId } = c.req.param();
-      const { thumbnailUrl, playlistUrl, width, height } = c.req.valid("json");
-      const video = await db.video.update({
-        where: { id: videoId },
-        data: { thumbnailUrl, playlistUrl, width, height },
-      });
-      return c.json({ video });
-    },
-  );
+    })
+    // Videos
+    .patch(
+      "/video/:videoId",
+      zValidator(
+        "json",
+        z.object({
+          thumbnailUrl: z.string().optional(),
+          playlistUrl: z.string().optional(),
+          width: z.number().optional(),
+          height: z.number().optional(),
+        }),
+      ),
+      async (c) => {
+        const { videoId } = c.req.param();
+        const { thumbnailUrl, playlistUrl, width, height } =
+          c.req.valid("json");
+        const video = await db.video.update({
+          where: { id: videoId },
+          data: { thumbnailUrl, playlistUrl, width, height },
+        });
+        return c.json({ video });
+      },
+    );
+};
+
+export type OrchestratorApp = ReturnType<typeof createOrchestratorApp>;
 
 async function orchestratorHandler({ request, params, ctx, cf }: RequestInfo) {
   // ToDo: do we need params/ctx out of redwood?
   const url = new URL(request.url);
+  const orchestratorApp = createOrchestratorApp(ctx.db);
 
   const honoRequest = new Request(new URL(`${url.pathname}${url.search}`, url.origin), {
     method: request.method,
@@ -136,5 +142,4 @@ async function orchestratorHandler({ request, params, ctx, cf }: RequestInfo) {
   return response;
 }
 
-export type OrchestratorApp = typeof orchestratorApp;
 export default [route("*", orchestratorHandler)];

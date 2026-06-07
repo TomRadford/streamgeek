@@ -1,12 +1,12 @@
 import { env } from "cloudflare:workers";
 import type { Agent } from "@generated/prisma/client";
 import createAgentClient from "../../agent/client";
-import { db } from "../../db";
+import type { AppDb } from "../../db";
 
 /**
  * @returns Agent that is available to take a job
  */
-export const getAgent = async () => {
+export const getAgent = async (db: AppDb) => {
   const agents = await db.agent.findMany({
     select: {
       id: true,

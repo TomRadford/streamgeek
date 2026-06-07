@@ -1,9 +1,9 @@
 import { defineScript } from "rwsdk/worker";
-import { db, setupDb } from "@/db";
+import { createDb } from "@/db";
 import { env } from "cloudflare:workers";
 
 export default defineScript(async () => {
-  await setupDb(env);
+  const db = createDb(env);
 
   console.error("NOT IMPLEMENTED");
 
